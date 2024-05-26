@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <vector>
+#include <cmath>
 #include <SDL2/SDL.h>
 
 #ifdef __EMSCRIPTEN__
@@ -96,6 +97,58 @@ void init_particles(int num_particles) {
     }
 }
 
+
+// Function to handle particle collisions
+void handle_particle_collisions() {
+    for (size_t i=0; i < particles.size(); ++i) {
+        for (size_t j=0; j < particles.size(); ++j) {
+            // get references to two particles
+            Particle& p1 = particles[i];
+            Particle& p2 = particles[j];
+
+            // get distance between the particles
+            float dx = p2.x - p1.x;
+            float dy = p2.y - p1.y;
+            float distance = sqrt(dx*dx + dy*dy);
+            float min_distance = (p1.size + p2.size) / 2.0f;
+            
+            // compute collistion among particles
+            if (distance < min_distance) {
+                // calculate the angle of collision
+                float angle = atan2(dy, dx);
+                float sin_angle = sin(angle);
+                float cos_angle = cos(angle);
+
+                // rotate particle velocities to the coordinate system aligned with the collision angle
+                float v1x = p1.vx * cos_angle + p1.vy * sin_angle;
+                float v1y = p1.vy * cos_angle - p1.vx * sin_angle;
+                float v2x = p2.vx * cos_angle + p2.vy * sin_angle;
+                float v2y = p2.vy * cos_angle - p2.vx * sin_angle;
+
+                // exchange the x velocities between p1 and p2
+                float temp = v1x;
+                v1x = v2x;
+                v2x = temp;
+
+                // rotate velocities back to the original coordinate system
+                p1.vx = v1x * cos_angle - v1y * sin_angle;
+                p1.vy = v1y * cos_angle + v1x * sin_angle;
+                p2.vx = v2x * cos_angle - v2y * sin_angle;
+                p2.vy = v2y * cos_angle + v2x * sin_angle;
+
+                // separate the particles to prevent overlap
+                float overlap = min_distance - distance;
+                float separation = overlap / 2.0f;
+                p1.x -= separation * cos_angle;
+                p1.y -= separation * sin_angle;
+                p2.x += separation * cos_angle;
+                p2.y += separation * sin_angle;
+            }
+        }
+    }
+}
+
+
 // Function to handle particle simulation
 void update_particles(float dt) {
     for (auto& p : particles) {
@@ -116,7 +169,11 @@ void update_particles(float dt) {
             p.y = (p.y < 0) ? 0 : SCREEN_HEIGHT;
         }
     }
+
+    // handle particle collisions
+    handle_particle_collisions();
 }
+
 
 // Function to render particles on screen
 void render_particles() {
@@ -167,6 +224,7 @@ static void update(void) {
     // Present the renderer
     SDL_RenderPresent(renderer);
 }
+
 
 int main(int argc, char** argv) {
     // Init SDL
