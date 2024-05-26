@@ -20,7 +20,7 @@ uint SCREEN_HEIGHT = 960;
 struct Particle {
     float x, y;
     float vx, vy;
-    float size;
+    float size = 5.0f;
 };
 
 // Gravity and Damping factors
@@ -90,8 +90,6 @@ void init_particles(int num_particles) {
         // random velocity
         p.vx = (rand() % 10 - 5) / 1.0f;
         p.vy = (rand() % 10 - 5) / 1.0f;
-        // default size
-        p.size = 5.0f;
         // push to vector
         particles.push_back(p);
     }
