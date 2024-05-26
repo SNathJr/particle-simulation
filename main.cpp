@@ -23,8 +23,9 @@ struct Particle {
 };
 
 // Gravity and Damping factors
-const float GRAVITY = 0.1f;
-const float DAMPING = 0.9f;
+const float GRAVITY = 98.0f;
+const float DAMPING = 0.6f;
+const float FIXED_TIMESTEP = 0.016f; // 16 ms for about 60 fps
 
 // A vector to hold the particles
 std::vector<Particle> particles;
@@ -83,11 +84,11 @@ void init_particles(int num_particles) {
     for (int i=0; i < num_particles; ++i) {
         Particle p;
         // random positions
-        p.x = centerX + rand() % 20 - 10;
-        p.y = centerY + rand() % 20 - 10;
+        p.x = centerX + rand() % 200 - 100;
+        p.y = centerY + rand() % 200 - 100;
         // random velocity
-        p.vx = (rand() % 10 - 5) / 10.0f;
-        p.vy = (rand() % 10 - 5) / 10.0f;
+        p.vx = (rand() % 10 - 5) / 1.0f;
+        p.vy = (rand() % 10 - 5) / 1.0f;
         // default size
         p.size = 5.0f;
         // push to vector
@@ -96,12 +97,12 @@ void init_particles(int num_particles) {
 }
 
 // Function to handle particle simulation
-void update_particles() {
+void update_particles(float dt) {
     for (auto& p : particles) {
-        // enact gravity on velocity; and velocity on positions
-        p.vy += GRAVITY;
-        p.x += p.vx;
-        p.y += p.vy;
+        // enact gravity on velocity; and velocity on positions (with delta time)
+        p.vy += GRAVITY * dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
 
         // handle screen edge collisions on x axis
         if (p.x < 0 || p.x > SCREEN_WIDTH) {
@@ -136,11 +137,25 @@ void render_particles() {
 
 // Create SDL update loop
 static void update(void) {
+    // create time stamps (static last_time persists out of scope)
+    static Uint32 last_time = SDL_GetTicks();
+    Uint32 current_time = SDL_GetTicks();
+    float elapsed_time = (current_time - last_time) / 1000.0f;
+    last_time = current_time;
+
     // call event handler
     event_handler();
 
-    // update particles
-    update_particles();
+    // update particles with time delta
+    while (elapsed_time >= FIXED_TIMESTEP) {
+        update_particles(FIXED_TIMESTEP);
+        elapsed_time -= FIXED_TIMESTEP;
+    }
+
+    // Ensure remaining elapsed time is carried over to the next frame
+    if (elapsed_time > 0) {
+        update_particles(elapsed_time);
+    }
 
     // Clear the renderer with a dark color
     SDL_SetRenderDrawColor(renderer, 40, 42, 54, 255);
@@ -173,7 +188,7 @@ int main(int argc, char** argv) {
     );
 
     // initialize particles
-    init_particles(100);
+    init_particles(1000);
     
     // SDL JS Configuration with Emscripten
     #ifdef TEST_SDL_LOCK_OPTS
