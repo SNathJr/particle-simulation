@@ -23,8 +23,8 @@ struct Particle {
 };
 
 // Gravity and Damping factors
-const float GRAVITY = 98.0f;
-const float DAMPING = 0.6f;
+const float GRAVITY = 98.0f; // Exagenrated gravity
+const float DAMPING = 0.6f; // Damps collistions
 const float FIXED_TIMESTEP = 0.016f; // 16 ms for about 60 fps
 
 // A vector to hold the particles
@@ -194,6 +194,9 @@ int main(int argc, char** argv) {
     #ifdef TEST_SDL_LOCK_OPTS
     EM_ASM({SDL.defaults.copyOnLock = false; SDL.defaults.discardOnLock = true; SDL.defaults.opaqueFront = false;});
     #endif
+
+    // Set last time before entering the main loop
+    static Uint32 last_time = SDL_GetTicks();
     
     // Run update function with emscripten (using browsers refresh rate)
     #ifdef __EMSCRIPTEN__
