@@ -12,8 +12,8 @@ SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 
 // Define Screen Width and Height
-uint SCREEN_WIDTH = 800;
-uint SCREEN_HEIGHT = 600;
+uint SCREEN_WIDTH = 1920;
+uint SCREEN_HEIGHT = 960;
 
 // Particles related code
 struct Particle {
