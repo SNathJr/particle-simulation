@@ -1,0 +1,7 @@
+# VSCode Files
+.vscode/
+.history/
+*.visx
+
+# Build directory
+build/*
