@@ -51,6 +51,12 @@ To build and run the project as a web application, simply run the script without
 ./build.sh
 ```
 
+To additionally start a local http server use:
+
+```sh
+./build.sh execute
+```
+
 This will build the project for the web and start a local HTTP server to serve the application.
 
 #### Build for Native
@@ -61,7 +67,13 @@ To build the project as a native application, use the `native` argument:
 ./build.sh native
 ```
 
-The native executable will be located in the `build` directory as `particle_simulation`.
+The native executable will be located in the `build` directory as `main.elf`.
+
+To additionally execute the built file, use:
+
+```sh
+./build.sh execute native
+```
 
 #### Clean and Build
 
