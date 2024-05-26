@@ -15,6 +15,20 @@ SDL_Renderer* renderer = NULL;
 uint SCREEN_WIDTH = 800;
 uint SCREEN_HEIGHT = 600;
 
+// Particles related code
+struct Particle {
+    float x, y;
+    float vx, vy;
+    float size;
+};
+
+// Gravity and Damping factors
+const float GRAVITY = 0.1f;
+const float DAMPING = 0.9f;
+
+// A vector to hold the particles
+std::vector<Particle> particles;
+
 
 void handle_resize(int width, int height) {
     // Set global variables for width and height
@@ -57,14 +71,83 @@ static void event_handler(void) {
     }
 }
 
+
+// Function to create particles on initialization
+void init_particles(int num_particles) {
+    // clear the particles vector
+    particles.clear();
+    // compute the center of the screen
+    float centerX = SCREEN_WIDTH / 2.0f;
+    float centerY = SCREEN_HEIGHT / 2.0f;
+    // place the particles around the center of the screen randomly
+    for (int i=0; i < num_particles; ++i) {
+        Particle p;
+        // random positions
+        p.x = centerX + rand() % 20 - 10;
+        p.y = centerY + rand() % 20 - 10;
+        // random velocity
+        p.vx = (rand() % 10 - 5) / 10.0f;
+        p.vy = (rand() % 10 - 5) / 10.0f;
+        // default size
+        p.size = 5.0f;
+        // push to vector
+        particles.push_back(p);
+    }
+}
+
+// Function to handle particle simulation
+void update_particles() {
+    for (auto& p : particles) {
+        // enact gravity on velocity; and velocity on positions
+        p.vy += GRAVITY;
+        p.x += p.vx;
+        p.y += p.vy;
+
+        // handle screen edge collisions on x axis
+        if (p.x < 0 || p.x > SCREEN_WIDTH) {
+            p.vx = -p.vx * DAMPING;
+            p.x = (p.x < 0) ? 0 : SCREEN_WIDTH;
+        }
+
+        // handle screen edge collisions on y axis
+        if (p.y < 0 || p.y > SCREEN_HEIGHT) {
+            p.vy = -p.vy * DAMPING;
+            p.y = (p.y < 0) ? 0 : SCREEN_HEIGHT;
+        }
+    }
+}
+
+// Function to render particles on screen
+void render_particles() {
+    // set renderer color once
+    SDL_SetRenderDrawColor(renderer, 139, 233, 253, 255);
+    // draw each particle
+    for (const auto& p: particles) {
+        SDL_Rect rect = {
+            static_cast<int>(p.x - p.size / 2),
+            static_cast<int>(p.y - p.size / 2),
+            static_cast<int>(p.size),
+            static_cast<int>(p.size)
+        };
+        SDL_RenderFillRect(renderer, &rect);
+    }
+}
+
+
 // Create SDL update loop
 static void update(void) {
     // call event handler
     event_handler();
 
+    // update particles
+    update_particles();
+
     // Clear the renderer with a dark color
     SDL_SetRenderDrawColor(renderer, 40, 42, 54, 255);
     SDL_RenderClear(renderer);
+
+    // render particles
+    render_particles();
 
     // Present the renderer
     SDL_RenderPresent(renderer);
@@ -88,6 +171,9 @@ int main(int argc, char** argv) {
         -1,
         SDL_RENDERER_ACCELERATED
     );
+
+    // initialize particles
+    init_particles(100);
     
     // SDL JS Configuration with Emscripten
     #ifdef TEST_SDL_LOCK_OPTS
